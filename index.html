@@ -156,6 +156,19 @@
                   <strong>Tag:</strong>
                   <span class="badge bg-secondary">${book.tag}</span>
                 </p>
+
+                <p class="card-text">
+                  <strong>Content:</strong><br>
+                  ${book.content || "No content available"}
+                </p>
+
+                <p class="card-text mb-1">
+                  <strong>Notes:</strong>
+                </p>
+
+                <div class="border rounded p-2 bg-light">
+                  ${book.notes || "No notes available"}
+                </div>
               </div>
             </div>
           </div>
