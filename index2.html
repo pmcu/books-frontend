@@ -53,7 +53,9 @@ async function loadBooks() {
 // Load text file
 async function displayBook(id) {
 
-    const book = books.find(b => b.id === id);
+    const book = books.find(
+    b => String(b.id) === String(id)
+);
 
     if (!book) return;
 
