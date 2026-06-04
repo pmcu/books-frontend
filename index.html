@@ -25,7 +25,12 @@
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container">
     <a class="navbar-brand" href="index.html">Keady Books</a>
-
+<div class="mb-3">
+  <label class="form-label">Select Book</label>
+  <select id="bookSelect" class="form-select">
+    <option value="">Choose a book...</option>
+  </select>
+</div>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -55,9 +60,7 @@
 <hr>
     <div class="row mb-4">
       <div class="col-md-4 mb-2">
-        <button id="loadBooks" class="btn btn-primary w-100">
-          Load Books
-        </button>
+     
       </div>
 
       <div class="col-md-4 mb-2">
@@ -80,129 +83,55 @@
   </div>
 
   <script>
-    const API_URL = "https://books-api-production-61c4.up.railway.app/books";
+   
 
     let allBooks = [];
 
-    const loadBooksButton = document.getElementById("loadBooks");
-    const output = document.getElementById("output");
-    const searchInput = document.getElementById("searchInput");
-    const tagFilter = document.getElementById("tagFilter");
+async function loadSelectedBook(file) {
+  try {
+    output.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-info">Loading book...</div>
+      </div>
+    `;
 
-    loadBooksButton.addEventListener("click", loadBooks);
-    searchInput.addEventListener("input", filterBooks);
-    tagFilter.addEventListener("change", filterBooks);
+    const response = await fetch(`data/${file}`);
+    allBooks = await response.json();
 
-    async function loadBooks() {
-      try {
-        output.innerHTML = `
-          <div class="col-12">
-            <div class="alert alert-info">Loading books...</div>
-          </div>
-        `;
+    populateTagFilter(allBooks);
+    renderBooks(allBooks);
 
-        const response = await fetch(API_URL);
+  } catch (error) {
+    console.error(error);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch books");
-        }
+    output.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-danger">
+          Could not load book file.
+        </div>
+      </div>
+    `;
+  async function loadBookList() {
+    const response = await fetch("data/books.json");
+    const books = await response.json();
 
-        allBooks = await response.json();
+    const select = document.getElementById("bookSelect");
 
-        populateTagFilter(allBooks);
-        renderBooks(allBooks);
+    books.forEach(book => {
+      const option = document.createElement("option");
+      option.value = book.file;
+      option.textContent = book.title;
+      select.appendChild(option);
+  });
+}
 
-      } catch (error) {
-        console.error(error);
-
-        output.innerHTML = `
-          <div class="col-12">
-            <div class="alert alert-danger">
-              Could not load books.
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    function populateTagFilter(books) {
-      const tags = [...new Set(books.map(book => book.tag))];
-
-      tagFilter.innerHTML = '<option value="all">All Tags</option>';
-
-      tags.forEach(tag => {
-        const option = document.createElement("option");
-        option.value = tag;
-        option.textContent = tag;
-        tagFilter.appendChild(option);
-      });
-    }
-
-    function filterBooks() {
-      const searchTerm = searchInput.value.toLowerCase();
-      const selectedTag = tagFilter.value;
-
-      const filteredBooks = allBooks.filter(book => {
-        const matchesSearch =
-          book.title.toLowerCase().includes(searchTerm) ||
-          book.author.toLowerCase().includes(searchTerm);
-
-        const matchesTag =
-          selectedTag === "all" || book.tag === selectedTag;
-
-        return matchesSearch && matchesTag;
-      });
-
-      renderBooks(filteredBooks);
-    }
-
-    function renderBooks(books) {
-      output.innerHTML = "";
-
-      if (books.length === 0) {
-        output.innerHTML = `
-          <div class="col-12">
-            <div class="alert alert-warning">
-              No books found.
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      books.forEach(book => {
-        output.innerHTML += `
-          <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card shadow-sm h-100 book-card">
-              <div class="card-body">
-                <h4 class="card-title">${book.title}</h4>
-                <p class="card-text">
-                  <strong>Author:</strong> ${book.author}
-                </p>
-                <p class="card-text">
-                  <strong>Tag:</strong>
-                  <span class="badge bg-secondary">${book.tag}</span>
-                </p>
-
-                <p class="card-text">
-                  <strong>Content:</strong><br>
-                  ${book.content || "No content available"}
-                </p>
-
-                <p class="card-text mb-1">
-                  <strong>Notes:</strong>
-                </p>
-
-                <div class="border rounded p-2 bg-light">
-                  ${book.notes || "No notes available"}
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-    }
-  </script>
-
+loadBookList();
+    document.getElementById("bookSelect").addEventListener("change", (e) => {
+  if (!e.target.value) return;
+  loadSelectedBook(e.target.value);
+});
+  }
+}
+    
 </body>
 </html>
