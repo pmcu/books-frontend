@@ -19,7 +19,7 @@
 ```
 <h1 class="mb-4">Books Test Page</h1>
 
-<div class="mb-4">
+<div class="mb-3">
     <label class="form-label">Select Record</label>
 
     <select id="bookSelect" class="form-select">
@@ -40,10 +40,9 @@ const bookSelect = document.getElementById("bookSelect");
 const output = document.getElementById("output");
 
 
-// ----------------------
+// -------------------------
 // Load books.json
-// ----------------------
-
+// -------------------------
 async function loadBooks() {
 
     try {
@@ -51,6 +50,8 @@ async function loadBooks() {
         const response = await fetch("data/books.json");
 
         books = await response.json();
+
+        console.log("Books loaded:", books);
 
         books.forEach(book => {
 
@@ -65,11 +66,11 @@ async function loadBooks() {
 
         });
 
-        console.log("Loaded", books.length, "records");
-
     }
 
     catch(error) {
+
+        console.error(error);
 
         output.innerHTML = `
             <div class="alert alert-danger">
@@ -77,17 +78,14 @@ async function loadBooks() {
             </div>
         `;
 
-        console.error(error);
-
     }
 
 }
 
 
-// ----------------------
-// Display record
-// ----------------------
-
+// -------------------------
+// Display selected record
+// -------------------------
 async function displayRecord(id) {
 
     const book =
@@ -95,35 +93,41 @@ async function displayRecord(id) {
 
     if (!book) return;
 
-    let content = "";
+    console.log("Selected record:", book);
+
+    let contentText = "";
 
     try {
 
+        console.log("Loading:", book.content);
+
         const response =
-            await fetch(`data/${book.content_file}`);
+            await fetch(`data/${book.content}`);
 
         if (!response.ok) {
 
-            throw new Error("Text file not found");
+            throw new Error(
+                `File not found: ${book.content}`
+            );
 
         }
 
-        content = await response.text();
+        contentText = await response.text();
 
     }
 
     catch(error) {
 
-        content =
-            `ERROR: Could not load ${book.content_file}`;
-
         console.error(error);
+
+        contentText =
+            `ERROR: Could not load ${book.content}`;
 
     }
 
     output.innerHTML = `
 
-        <div class="card">
+        <div class="card shadow-sm">
 
             <div class="card-body">
 
@@ -146,22 +150,24 @@ async function displayRecord(id) {
 
                 <p>
                     <strong>Text File:</strong>
-                    ${book.content_file}
+                    ${book.content}
                 </p>
 
                 <hr>
 
-                <pre style="white-space: pre-wrap;">
-${content}
-                </pre>
+                <h5>Content</h5>
+
+                <pre style="
+                    white-space: pre-wrap;
+                    font-family: inherit;
+                ">${contentText}</pre>
 
 ```
             <hr>
 
-            <p>
-                <strong>Notes:</strong>
-                ${book.notes || ""}
-            </p>
+            <h5>Notes</h5>
+
+            <p>${book.notes || ""}</p>
 
         </div>
 
@@ -172,24 +178,28 @@ ${content}
 
 }
 
-// ----------------------
-// Events
-// ----------------------
-
-bookSelect.addEventListener("change", e => {
+// -------------------------
+// Dropdown event
+// -------------------------
+bookSelect.addEventListener(
+"change",
+function(event) {
 
 ```
-if (!e.target.value) return;
+    const id = event.target.value;
 
-displayRecord(e.target.value);
+    if (!id) return;
+
+    displayRecord(id);
+
+}
 ```
 
-});
+);
 
-// ----------------------
-// Start
-// ----------------------
-
+// -------------------------
+// Start app
+// -------------------------
 loadBooks();
 
 </script>
