@@ -88,30 +88,20 @@
 
 <script>
   let allBooks = [];
+let currentIndex = 0;
 
-  const output = document.getElementById("output");
-  const searchInput = document.getElementById("searchInput");
-  const tagFilter = document.getElementById("tagFilter");
-  const bookSelect = document.getElementById("bookSelect");
+const output = document.getElementById("output");
+const searchInput = document.getElementById("searchInput");
+const tagFilter = document.getElementById("tagFilter");
+const bookSelect = document.getElementById("bookSelect");
 
-  // ---------------------------
-  // LOAD BOOK LIST
-  // ---------------------------
-  async function loadBookList() {
+// ----------------------------
+// LOAD BOOK LIST
+// ----------------------------
+async function loadBookList() {
   try {
-    console.log("Loading books.json...");
-
     const response = await fetch("data/books.json");
-
-    console.log("Response status:", response.status);
-
-    if (!response.ok) {
-      throw new Error("books.json not found");
-    }
-
     const books = await response.json();
-
-    console.log("Books loaded:", books);
 
     books.forEach(book => {
       const option = document.createElement("option");
@@ -121,94 +111,110 @@
     });
 
   } catch (err) {
-    console.error("Book list error:", err);
+    console.error("Failed to load books.json", err);
   }
 }
 
-  loadBookList();
+loadBookList();
 
-  // ---------------------------
-  // SELECT BOOK
-  // ---------------------------
-  bookSelect.addEventListener("change", (e) => {
-    if (!e.target.value) return;
-    loadSelectedBook(e.target.value);
+// ----------------------------
+// SELECT BOOK
+// ----------------------------
+bookSelect.addEventListener("change", (e) => {
+  if (!e.target.value) return;
+  loadSelectedBook(e.target.value);
+});
+
+// ----------------------------
+// LOAD SELECTED BOOK
+// ----------------------------
+async function loadSelectedBook(file) {
+  try {
+    output.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-info">Loading book...</div>
+      </div>
+    `;
+
+    const response = await fetch(`data/${file}`);
+    const data = await response.json();
+
+    allBooks = data;
+    currentIndex = 0;
+
+    populateTagFilter(allBooks);
+    renderCurrent();
+
+  } catch (err) {
+    console.error(err);
+
+    output.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-danger">
+          Could not load book file.
+        </div>
+      </div>
+    `;
+  }
+}
+
+// ----------------------------
+// TAG FILTER
+// ----------------------------
+function populateTagFilter(books) {
+  const tags = [...new Set(books.map(b => b.tag))];
+
+  tagFilter.innerHTML = '<option value="all">All Tags</option>';
+
+  tags.forEach(tag => {
+    const option = document.createElement("option");
+    option.value = tag;
+    option.textContent = tag;
+    tagFilter.appendChild(option);
+  });
+}
+
+// ----------------------------
+// SEARCH + FILTER
+// ----------------------------
+searchInput.addEventListener("input", filterBooks);
+tagFilter.addEventListener("change", filterBooks);
+
+function filterBooks() {
+  const searchTerm = searchInput.value.toLowerCase();
+  const selectedTag = tagFilter.value;
+
+  const filtered = allBooks.filter(book => {
+    const matchesSearch =
+      book.title.toLowerCase().includes(searchTerm) ||
+      book.author.toLowerCase().includes(searchTerm);
+
+    const matchesTag =
+      selectedTag === "all" || book.tag === selectedTag;
+
+    return matchesSearch && matchesTag;
   });
 
-  async function loadSelectedBook(file) {
-    try {
-      output.innerHTML = `
-        <div class="col-12">
-          <div class="alert alert-info">Loading book...</div>
-        </div>
-      `;
+  allBooks = filtered;
+  currentIndex = 0;
 
-      const response = await fetch(`data/${file}`);
-      allBooks = await response.json();
+  renderCurrent();
+}
 
-      populateTagFilter(allBooks);
-      renderBooks(allBooks);
-
-    } catch (error) {
-      console.error(error);
-
-      output.innerHTML = `
-        <div class="col-12">
-          <div class="alert alert-danger">
-            Could not load book file.
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  // ---------------------------
-  // FILTER TAGS
-  // ---------------------------
-  function populateTagFilter(books) {
-    const tags = [...new Set(books.map(book => book.tag))];
-
-    tagFilter.innerHTML = '<option value="all">All Tags</option>';
-
-    tags.forEach(tag => {
-      const option = document.createElement("option");
-      option.value = tag;
-      option.textContent = tag;
-      tagFilter.appendChild(option);
-    });
-  }
-
-  // ---------------------------
-  // SEARCH + FILTER
-  // ---------------------------
-  searchInput.addEventListener("input", filterBooks);
-  tagFilter.addEventListener("change", filterBooks);
-
-  function filterBooks() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const selectedTag = tagFilter.value;
-
-    const filteredBooks = allBooks.filter(book => {
-      const matchesSearch =
-        book.title.toLowerCase().includes(searchTerm) ||
-        book.author.toLowerCase().includes(searchTerm);
-
-      const matchesTag =
-        selectedTag === "all" || book.tag === selectedTag;
-
-      return matchesSearch && matchesTag;
-    });
-
-    renderBooks(filteredBooks);
-  }
-
-  // ---------------------------
-  // RENDER
-  // ---------------------------
-  function renderCurrent() {
+// ----------------------------
+// RENDER CURRENT ITEM
+// ----------------------------
+function renderCurrent() {
   output.innerHTML = "";
 
-  if (!allBooks.length) return;
+  if (!allBooks.length) {
+    output.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-warning">No records found.</div>
+      </div>
+    `;
+    return;
+  }
 
   const book = allBooks[currentIndex];
 
@@ -242,14 +248,20 @@
 
           <hr>
 
-          <div class="d-flex justify-content-between">
-            <button class="btn btn-outline-primary" onclick="prevItem()">Previous</button>
+          <div class="d-flex justify-content-between align-items-center">
+
+            <button class="btn btn-outline-primary" onclick="prevItem()">
+              Previous
+            </button>
 
             <span>
               ${currentIndex + 1} / ${allBooks.length}
             </span>
 
-            <button class="btn btn-outline-primary" onclick="nextItem()">Next</button>
+            <button class="btn btn-outline-primary" onclick="nextItem()">
+              Next
+            </button>
+
           </div>
 
         </div>
@@ -257,7 +269,23 @@
     </div>
   `;
 }
-    });
+
+// ----------------------------
+// NAVIGATION
+// ----------------------------
+function nextItem() {
+  if (currentIndex < allBooks.length - 1) {
+    currentIndex++;
+    renderCurrent();
+  }
+}
+
+function prevItem() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderCurrent();
+  }
+}
   }
 </script>
 
