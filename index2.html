@@ -41,7 +41,9 @@ async function loadBooks() {
 
     try {
 
-        const response = await fetch("data/books.json");
+        const path = `data/${book.content}`;
+            console.log("Fetching:", path);
+        const response = await fetch(path);
 
         books = await response.json();
 
@@ -183,6 +185,8 @@ bookSelect.addEventListener(
         if (!id) return;
 
         displayRecord(id);
+        console.log("BOOK:", book);
+        console.log("CONTENT PATH:", `data/${book.content}`);
 
     }
 );
