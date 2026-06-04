@@ -205,54 +205,58 @@
   // ---------------------------
   // RENDER
   // ---------------------------
-  function renderBooks(books) {
-    output.innerHTML = "";
+  function renderCurrent() {
+  output.innerHTML = "";
 
-    if (books.length === 0) {
-      output.innerHTML = `
-        <div class="col-12">
-          <div class="alert alert-warning">
-            No books found.
+  if (!allBooks.length) return;
+
+  const book = allBooks[currentIndex];
+
+  output.innerHTML = `
+    <div class="col-12">
+      <div class="card shadow-sm book-card">
+        <div class="card-body">
+
+          <h4>${book.title}</h4>
+
+          <p><strong>Author:</strong> ${book.author}</p>
+
+          <p>
+            <strong>Tag:</strong>
+            <span class="badge bg-secondary">${book.tag}</span>
+          </p>
+
+          <hr>
+
+          <p><strong>Content:</strong></p>
+          <div class="p-2 bg-light border rounded">
+            ${book.content || ""}
           </div>
-        </div>
-      `;
-      return;
-    }
 
-    books.forEach(book => {
-      output.innerHTML += `
-        <div class="col-md-6 col-lg-4 mb-4">
-          <div class="card shadow-sm h-100 book-card">
-            <div class="card-body">
+          <hr>
 
-              <h4 class="card-title">${book.title}</h4>
-
-              <p class="card-text">
-                <strong>Author:</strong> ${book.author}
-              </p>
-
-              <p class="card-text">
-                <strong>Tag:</strong>
-                <span class="badge bg-secondary">${book.tag}</span>
-              </p>
-
-              <p class="card-text">
-                <strong>Content:</strong><br>
-                ${book.content || "No content available"}
-              </p>
-
-              <p class="card-text mb-1">
-                <strong>Notes:</strong>
-              </p>
-
-              <div class="border rounded p-2 bg-light">
-                ${book.notes || "No notes available"}
-              </div>
-
-            </div>
+          <p><strong>Notes:</strong></p>
+          <div class="p-2 bg-light border rounded">
+            ${book.notes || ""}
           </div>
+
+          <hr>
+
+          <div class="d-flex justify-content-between">
+            <button class="btn btn-outline-primary" onclick="prevItem()">Previous</button>
+
+            <span>
+              ${currentIndex + 1} / ${allBooks.length}
+            </span>
+
+            <button class="btn btn-outline-primary" onclick="nextItem()">Next</button>
+          </div>
+
         </div>
-      `;
+      </div>
+    </div>
+  `;
+}
     });
   }
 </script>
