@@ -1,24 +1,34 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Book File Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books Test</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+```
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet">
+```
+
 </head>
-
 <body>
 
-<div class="container mt-4">
+<div class="container mt-5">
 
-    <h1>Book File Test</h1>
+```
+<h1 class="mb-4">Books Test Page</h1>
 
-    <select id="bookSelect" class="form-select mb-3">
+<div class="mb-4">
+    <label class="form-label">Select Record</label>
+
+    <select id="bookSelect" class="form-select">
         <option value="">Choose a record...</option>
     </select>
+</div>
 
-    <div id="bookInfo"></div>
+<div id="output"></div>
+```
 
 </div>
 
@@ -27,35 +37,61 @@
 let books = [];
 
 const bookSelect = document.getElementById("bookSelect");
-const bookInfo = document.getElementById("bookInfo");
+const output = document.getElementById("output");
 
 
+// ----------------------
 // Load books.json
+// ----------------------
+
 async function loadBooks() {
 
-    const response = await fetch("data/books.json");
+    try {
 
-    books = await response.json();
+        const response = await fetch("data/books.json");
 
-    books.forEach(book => {
+        books = await response.json();
 
-        const option = document.createElement("option");
+        books.forEach(book => {
 
-        option.value = book.id;
-        option.textContent = `${book.id} - ${book.title}`;
+            const option = document.createElement("option");
 
-        bookSelect.appendChild(option);
+            option.value = book.id;
 
-    });
+            option.textContent =
+                `${book.id} - ${book.title}`;
+
+            bookSelect.appendChild(option);
+
+        });
+
+        console.log("Loaded", books.length, "records");
+
+    }
+
+    catch(error) {
+
+        output.innerHTML = `
+            <div class="alert alert-danger">
+                Could not load books.json
+            </div>
+        `;
+
+        console.error(error);
+
+    }
+
 }
 
 
-// Load text file
-async function displayBook(id) {
+// ----------------------
+// Display record
+// ----------------------
 
-    const book = books.find(
-    b => String(b.id) === String(id)
-);
+async function displayRecord(id) {
+
+    const book =
+        books.find(b => String(b.id) === String(id));
 
     if (!book) return;
 
@@ -63,18 +99,29 @@ async function displayBook(id) {
 
     try {
 
-        const response = await fetch(`data/${book.content_file}`);
+        const response =
+            await fetch(`data/${book.content_file}`);
+
+        if (!response.ok) {
+
+            throw new Error("Text file not found");
+
+        }
 
         content = await response.text();
 
     }
-    catch(err) {
 
-        content = "Could not load text file.";
+    catch(error) {
+
+        content =
+            `ERROR: Could not load ${book.content_file}`;
+
+        console.error(error);
 
     }
 
-    bookInfo.innerHTML = `
+    output.innerHTML = `
 
         <div class="card">
 
@@ -82,31 +129,66 @@ async function displayBook(id) {
 
                 <h3>${book.title}</h3>
 
-                <p><strong>Author:</strong> ${book.author}</p>
+                <p>
+                    <strong>Author:</strong>
+                    ${book.author}
+                </p>
 
-                <p><strong>Tag:</strong> ${book.tag}</p>
+                <p>
+                    <strong>Tag:</strong>
+                    ${book.tag}
+                </p>
+
+                <p>
+                    <strong>Year:</strong>
+                    ${book.year}
+                </p>
+
+                <p>
+                    <strong>Text File:</strong>
+                    ${book.content_file}
+                </p>
 
                 <hr>
 
-                <pre>${content}</pre>
+                <pre style="white-space: pre-wrap;">
+${content}
+                </pre>
 
-                <hr>
+```
+            <hr>
 
-                <p>${book.notes}</p>
-
-            </div>
+            <p>
+                <strong>Notes:</strong>
+                ${book.notes || ""}
+            </p>
 
         </div>
 
-    `;
+    </div>
+
+`;
+```
+
 }
 
+// ----------------------
+// Events
+// ----------------------
 
 bookSelect.addEventListener("change", e => {
 
-    displayBook(e.target.value);
+```
+if (!e.target.value) return;
+
+displayRecord(e.target.value);
+```
 
 });
+
+// ----------------------
+// Start
+// ----------------------
 
 loadBooks();
 
