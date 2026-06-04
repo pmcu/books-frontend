@@ -82,94 +82,50 @@ async function loadBooks() {
 // -------------------------
 // Display selected record
 // -------------------------
-async function displayRecord(id) {
-
-    const book =
-        books.find(b => String(b.id) === String(id));
-
-    if (!book) return;
-
-    console.log("Selected record:", book);
-
-    let contentText = "";
+async function loadBooks() {
 
     try {
 
-        console.log("Loading:", book.content);
+        const url = "./data/books.json";
+        console.log("Fetching:", url);
 
-        const response =
-            await fetch(`data/${book.content}`);
+        const response = await fetch(url);
+
+        console.log("Status:", response.status);
 
         if (!response.ok) {
-
-            throw new Error(
-                `File not found: ${book.content}`
-            );
-
+            throw new Error(`HTTP error ${response.status}`);
         }
 
-        contentText = await response.text();
+        books = await response.json();
+
+        console.log("Loaded books:", books);
+
+        books.forEach(book => {
+
+            const option = document.createElement("option");
+
+            option.value = book.id;
+            option.textContent = `${book.id} - ${book.title}`;
+
+            bookSelect.appendChild(option);
+
+        });
 
     }
 
     catch(error) {
 
-        console.error(error);
+        console.error("LOAD ERROR:", error);
 
-        contentText =
-            `ERROR: Could not load ${book.content}`;
+        output.innerHTML = `
+            <div class="alert alert-danger">
+                Could not load books.json<br>
+                Check console for details.
+            </div>
+        `;
 
     }
-
-    output.innerHTML = `
-
-        <div class="card shadow-sm">
-
-            <div class="card-body">
-
-                <h3>${book.title}</h3>
-
-                <p>
-                    <strong>Author:</strong>
-                    ${book.author}
-                </p>
-
-                <p>
-                    <strong>Tag:</strong>
-                    ${book.tag}
-                </p>
-
-                <p>
-                    <strong>Year:</strong>
-                    ${book.year}
-                </p>
-
-                <p>
-                    <strong>Text File:</strong>
-                    ${book.content}
-                </p>
-
-                <hr>
-
-                <h5>Content</h5>
-
-                <pre style="
-                    white-space: pre-wrap;
-                    font-family: inherit;
-                ">${contentText}</pre>
-
-                <hr>
-
-                <h5>Notes</h5>
-
-                <p>${book.notes || ""}</p>
-
-            </div>
-
-        </div>
-
-    `;
-
 }
 
 
