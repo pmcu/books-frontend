@@ -41,7 +41,7 @@ async function loadBooks() {
 
     try {
 
-        const path = `data/${book.content}`;
+        const path = `data/${book.file}`;
             console.log("Fetching:", path);
         const response = await fetch(path);
 
